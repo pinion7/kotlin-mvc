@@ -3,6 +3,11 @@ package hello.kotlinmvc.controller
 import hello.kotlinmvc.model.UserRequest
 import hello.kotlinmvc.response.Result
 import hello.kotlinmvc.response.UserResponse
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.validation.BindingResult
+import org.springframework.validation.FieldError
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -24,7 +29,19 @@ class PutApiController {
     }
 
     @PutMapping("/put-mapping/object")
-    fun putMappingObject(@RequestBody body: UserRequest): UserResponse {
+    fun putMappingObject(@RequestBody @Validated body: UserRequest, bindingResult: BindingResult): Any {
+        println(body)
+
+        if (bindingResult.hasErrors()) {
+            val msg = StringBuilder();
+            bindingResult.allErrors.forEach { e ->
+                val field = e as FieldError;
+                val message = e.defaultMessage;
+                msg.append(field.field + " : " + message + "\n");
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(msg.toString());
+        }
+
         return UserResponse().apply {
             this.result = Result().apply {
                 this.resultCode = "OK"
